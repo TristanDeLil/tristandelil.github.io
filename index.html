@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>// jouw_naam — embedded & software dev</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,600;9..144,800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #06090d;
+    --bg-2: #0a1014;
+    --panel: #0d1419;
+    --pcb-green: #0a3d2e;
+    --pcb-line: #1a5d4a;
+    --line: #1c2530;
+    --line-2: #2a3543;
+    --ink: #e6edf3;
+    --ink-dim: #8b96a3;
+    --ink-faint: #525d6a;
+    --accent: #00ff88;       /* LED green */
+    --accent-amber: #ffb000; /* power LED amber */
+    --accent-red: #ff3344;   /* warning LED */
+    --accent-blue: #4cc9f0;  /* signal blue */
+    --solder: #c0c5ce;
+    --copper: #b87333;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  /* PCB trace background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.4;
+    background-image:
+      linear-gradient(var(--pcb-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--pcb-line) 1px, transparent 1px);
+    background-size: 60px 60px;
+    background-position: -1px -1px;
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 50%, black 30%, transparent 80%);
+    -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 50%, black 30%, transparent 80%);
+  }
+
+  /* Grain + scan lines */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.3;
+    background-image:
+      url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.08 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+      repeating-linear-gradient(0deg, transparent 0, transparent 2px, rgba(0,255,136,0.015) 2px, rgba(0,255,136,0.015) 3px);
+  }
+
+  /* Status bar with LEDs */
+  .statusbar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    background: var(--bg-2);
+    border-bottom: 1px solid var(--line);
+    padding: 6px 24px;
+    font-size: 11px;
+    color: var(--ink-faint);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 100;
+    letter-spacing: 0.05em;
+  }
+  .statusbar .leds {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+  }
+  .led {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+  }
+  .led::before {
+    content: '';
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    box-shadow: 0 0 6px currentColor;
+  }
+  .led.pwr { color: var(--accent-amber); }
+  .led.pwr::before { background: var(--accent-amber); }
+  .led.tx { color: var(--accent); }
+  .led.tx::before { background: var(--accent); animation: blink-fast 0.8s infinite; }
+  .led.rx { color: var(--accent-blue); }
+  .led.rx::before { background: var(--accent-blue); animation: blink-fast 1.3s infinite; }
+  .led.err { color: var(--accent-red); }
+  .led.err::before { background: var(--accent-red); opacity: 0.3; }
+
+  @keyframes blink-fast {
+    0%, 90% { opacity: 1; }
+    91%, 100% { opacity: 0.2; }
+  }
+
+  /* Nav */
+  nav {
+    position: fixed;
+    top: 28px; left: 0; right: 0;
+    padding: 16px 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(6, 9, 13, 0.88);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--line);
+    z-index: 99;
+  }
+  nav .brand {
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  nav .brand::before {
+    content: '';
+    width: 8px; height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    box-shadow: 0 0 10px var(--accent);
+  }
+  nav .brand span { color: var(--accent); }
+  nav ul {
+    display: flex;
+    gap: 32px;
+    list-style: none;
+  }
+  nav ul a {
+    color: var(--ink-dim);
+    text-decoration: none;
+    font-size: 13px;
+    transition: color 0.2s;
+  }
+  nav ul a::before {
+    content: '0x';
+    color: var(--accent);
+    margin-right: 4px;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  nav ul a:hover { color: var(--ink); }
+  nav ul a:hover::before { opacity: 1; }
+
+  main {
+    position: relative;
+    z-index: 2;
+    padding: 120px 32px 80px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  section { margin-bottom: 120px; scroll-margin-top: 100px; }
+
+  .section-label {
+    font-size: 12px;
+    color: var(--accent);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-label::before {
+    content: '';
+    width: 24px; height: 1px;
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+  }
+
+  h1, h2, h3 {
+    font-family: 'Fraunces', serif;
+    font-weight: 300;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+
+  /* HERO */
+  .hero {
+    min-height: calc(100vh - 200px);
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 60px;
+    align-items: center;
+  }
+  .hero-content h1 {
+    font-size: clamp(48px, 7vw, 88px);
+    margin-bottom: 32px;
+    animation: fadeUp 0.8s ease-out;
+  }
+  .hero-content h1 .italic { font-style: italic; color: var(--accent); }
+  .hero-content h1 .glow { text-shadow: 0 0 24px rgba(0, 255, 136, 0.35); }
+  .hero-content h1 .cursor {
+    display: inline-block;
+    width: 4px;
+    height: 0.9em;
+    background: var(--accent);
+    margin-left: 8px;
+    vertical-align: middle;
+    box-shadow: 0 0 10px var(--accent);
+    animation: blink 1s step-end infinite;
+  }
+  @keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .hero-subtitle {
+    color: var(--ink-dim);
+    font-size: 15px;
+    max-width: 540px;
+    margin-bottom: 40px;
+    animation: fadeUp 0.8s ease-out 0.2s backwards;
+  }
+  .hero-subtitle .key { color: var(--accent-amber); }
+  .hero-subtitle .str { color: var(--accent); }
+  .hero-subtitle .num { color: var(--accent-blue); }
+
+  .hero-meta {
+    display: flex;
+    gap: 32px;
+    font-size: 12px;
+    color: var(--ink-faint);
+    animation: fadeUp 0.8s ease-out 0.4s backwards;
+  }
+  .hero-meta div span {
+    display: block;
+    color: var(--ink);
+    margin-top: 4px;
+    font-size: 13px;
+  }
+
+  /* Oscilloscope */
+  .scope {
+    background: #000;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 16px;
+    position: relative;
+    box-shadow:
+      0 20px 60px rgba(0,0,0,0.6),
+      inset 0 0 60px rgba(0, 255, 136, 0.04);
+    animation: fadeUp 0.8s ease-out 0.3s backwards;
+  }
+  .scope-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: var(--accent);
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .scope-screen {
+    aspect-ratio: 5/3;
+    background:
+      repeating-linear-gradient(0deg, transparent 0, transparent 19px, rgba(0,255,136,0.08) 19px, rgba(0,255,136,0.08) 20px),
+      repeating-linear-gradient(90deg, transparent 0, transparent 19px, rgba(0,255,136,0.08) 19px, rgba(0,255,136,0.08) 20px),
+      radial-gradient(ellipse at center, #001a0d, #000);
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(0,255,136,0.2);
+    border-radius: 2px;
+  }
+  .scope-screen svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .scope-screen .wave {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 1.5;
+    filter: drop-shadow(0 0 4px var(--accent));
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 1000;
+    animation: draw 3s ease-out 0.5s forwards, pulse-glow 2s ease-in-out 3.5s infinite;
+  }
+  .scope-screen .wave-2 {
+    stroke: var(--accent-blue);
+    opacity: 0.6;
+    animation-delay: 0.8s, 3.8s;
+  }
+  @keyframes draw {
+    to { stroke-dashoffset: 0; }
+  }
+  @keyframes pulse-glow {
+    0%, 100% { filter: drop-shadow(0 0 4px var(--accent)); }
+    50% { filter: drop-shadow(0 0 12px var(--accent)); }
+  }
+  .scope-readout {
+    position: absolute;
+    top: 8px; left: 8px;
+    font-size: 9px;
+    color: var(--accent);
+    text-shadow: 0 0 4px var(--accent);
+    line-height: 1.5;
+  }
+  .scope-readout-right {
+    position: absolute;
+    top: 8px; right: 8px;
+    font-size: 9px;
+    color: var(--accent-amber);
+    text-align: right;
+    line-height: 1.5;
+  }
+  .scope-controls {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .scope-knob {
+    aspect-ratio: 1;
+    background: radial-gradient(circle at 30% 30%, #2a3543, #11161e);
+    border-radius: 50%;
+    border: 1px solid var(--line-2);
+    position: relative;
+    cursor: pointer;
+  }
+  .scope-knob::after {
+    content: '';
+    position: absolute;
+    top: 6px; left: 50%;
+    width: 2px; height: 30%;
+    background: var(--accent);
+    transform: translateX(-50%);
+    box-shadow: 0 0 4px var(--accent);
+  }
+  .scope-knob:nth-child(2)::after { transform: translateX(-50%) rotate(45deg); transform-origin: bottom; }
+  .scope-knob:nth-child(3)::after { transform: translateX(-50%) rotate(-30deg); transform-origin: bottom; }
+  .scope-knob:nth-child(4)::after { transform: translateX(-50%) rotate(90deg); transform-origin: bottom; }
+
+  /* ABOUT */
+  .about-grid {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 60px;
+    align-items: start;
+  }
+  .about-photo {
+    aspect-ratio: 3/4;
+    background:
+      linear-gradient(135deg, var(--bg-2), var(--panel));
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    position: relative;
+    overflow: hidden;
+  }
+  /* Solder pad corners */
+  .about-photo::before,
+  .about-photo::after {
+    content: '';
+    position: absolute;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--solder), #6b7280);
+    box-shadow: 0 0 8px rgba(192, 197, 206, 0.4);
+  }
+  .about-photo::before { top: 10px; left: 10px; }
+  .about-photo::after { bottom: 10px; right: 10px; }
+  .about-photo .pad-2 {
+    position: absolute;
+    top: 10px; right: 10px;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--solder), #6b7280);
+    box-shadow: 0 0 8px rgba(192, 197, 206, 0.4);
+  }
+  .about-photo .pad-3 {
+    position: absolute;
+    bottom: 10px; left: 10px;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--solder), #6b7280);
+    box-shadow: 0 0 8px rgba(192, 197, 206, 0.4);
+  }
+  .about-photo .label {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ink-faint);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  h2 {
+    font-size: clamp(32px, 4vw, 48px);
+    margin-bottom: 24px;
+  }
+  h2 .italic { font-style: italic; color: var(--accent); }
+
+  .about-text p {
+    color: var(--ink-dim);
+    margin-bottom: 16px;
+    max-width: 620px;
+  }
+  .about-text strong { color: var(--ink); font-weight: 500; }
+
+  /* Spec sheet */
+  .specs {
+    margin-top: 32px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 20px;
+    font-size: 12px;
+  }
+  .specs-title {
+    color: var(--accent);
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px dashed var(--line-2);
+  }
+  .specs-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 24px;
+  }
+  .spec-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    border-bottom: 1px dotted var(--line);
+  }
+  .spec-row .k { color: var(--ink-faint); }
+  .spec-row .v { color: var(--ink); }
+
+  .stack {
+    margin-top: 24px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .stack span {
+    padding: 4px 10px;
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    font-size: 11px;
+    color: var(--ink-dim);
+    transition: all 0.2s;
+  }
+  .stack span.hw {
+    border-color: rgba(255, 176, 0, 0.25);
+    color: var(--accent-amber);
+  }
+  .stack span.sw {
+    border-color: rgba(0, 255, 136, 0.25);
+    color: var(--accent);
+  }
+  .stack span:hover {
+    transform: translateY(-2px);
+    border-color: currentColor;
+  }
+
+  /* PROJECTS — as IC chips */
+  .projects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 32px;
+  }
+  .project {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 32px 24px 24px;
+    transition: all 0.3s;
+    position: relative;
+  }
+  /* IC pins */
+  .project::before, .project::after {
+    content: '';
+    position: absolute;
+    left: 24px; right: 24px;
+    height: 6px;
+    display: block;
+    background-image: linear-gradient(90deg, var(--solder) 0, var(--solder) 60%, transparent 60%);
+    background-size: 14px 100%;
+    background-repeat: repeat-x;
+    opacity: 0.5;
+  }
+  .project::before { top: -3px; }
+  .project::after { bottom: -3px; }
+
+  .project:hover {
+    border-color: var(--accent);
+    transform: translateY(-4px);
+    box-shadow:
+      0 12px 40px rgba(0,0,0,0.4),
+      0 0 0 1px rgba(0, 255, 136, 0.1);
+  }
+  .project:hover::before, .project:hover::after { opacity: 0.8; }
+
+  .project-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 4px;
+  }
+  .project-num {
+    font-size: 10px;
+    color: var(--ink-faint);
+    letter-spacing: 0.15em;
+  }
+  .project-status {
+    font-size: 9px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .project-status.shipped { background: rgba(0,255,136,0.1); color: var(--accent); border: 1px solid rgba(0,255,136,0.3); }
+  .project-status.wip { background: rgba(255,176,0,0.1); color: var(--accent-amber); border: 1px solid rgba(255,176,0,0.3); }
+  .project-status.archived { background: rgba(82,93,106,0.1); color: var(--ink-faint); border: 1px solid var(--line-2); }
+
+  .project h3 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px;
+    font-weight: 500;
+    margin-bottom: 14px;
+    color: var(--ink);
+  }
+  .project p {
+    color: var(--ink-dim);
+    font-size: 13px;
+    margin-bottom: 20px;
+  }
+  .project-tags {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+    font-size: 10px;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .project-tags span:not(:last-child)::after {
+    content: '·';
+    margin-left: 8px;
+    color: var(--ink-faint);
+  }
+  .project-link {
+    color: var(--ink);
+    text-decoration: none;
+    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid var(--line-2);
+    padding-bottom: 4px;
+    transition: all 0.2s;
+  }
+  .project-link:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+  .project-link::after {
+    content: '→';
+    transition: transform 0.2s;
+  }
+  .project-link:hover::after { transform: translate(4px, 0); }
+
+  /* BLOG / EVENTS — as logic analyzer rows */
+  .blog-list { display: flex; flex-direction: column; }
+  .blog-item {
+    display: grid;
+    grid-template-columns: 120px 1fr auto;
+    gap: 32px;
+    padding: 28px 0;
+    border-bottom: 1px dashed var(--line);
+    align-items: center;
+    transition: all 0.2s;
+    cursor: pointer;
+    position: relative;
+  }
+  .blog-item::before {
+    content: '';
+    position: absolute;
+    left: -16px;
+    top: 50%;
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--accent);
+    opacity: 0;
+    transform: translateY(-50%);
+    transition: opacity 0.2s;
+  }
+  .blog-item:hover {
+    padding-left: 8px;
+    border-color: var(--line-2);
+  }
+  .blog-item:hover::before { opacity: 1; }
+  .blog-date {
+    font-size: 12px;
+    color: var(--ink-faint);
+    font-feature-settings: 'tnum';
+  }
+  .blog-content h3 {
+    font-family: 'Fraunces', serif;
+    font-size: 22px;
+    font-weight: 400;
+    margin-bottom: 6px;
+    color: var(--ink);
+  }
+  .blog-content p {
+    font-size: 13px;
+    color: var(--ink-dim);
+  }
+  .blog-tag {
+    font-size: 10px;
+    padding: 4px 10px;
+    border: 1px solid var(--line-2);
+    border-radius: 20px;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    white-space: nowrap;
+  }
+  .blog-tag.event { color: var(--accent-amber); border-color: rgba(255,176,0,0.3); }
+  .blog-tag.podcast { color: var(--accent-blue); border-color: rgba(76,201,240,0.3); }
+  .blog-tag.hw { color: var(--copper); border-color: rgba(184,115,51,0.4); }
+
+  /* CONTACT */
+  .contact {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 60px;
+    position: relative;
+    overflow: hidden;
+  }
+  .contact::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--pcb-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--pcb-line) 1px, transparent 1px);
+    background-size: 30px 30px;
+    opacity: 0.25;
+    pointer-events: none;
+    mask-image: radial-gradient(circle at 80% 20%, black, transparent 60%);
+    -webkit-mask-image: radial-gradient(circle at 80% 20%, black, transparent 60%);
+  }
+  .contact::after {
+    content: '';
+    position: absolute;
+    top: 30px; right: 30px;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 16px var(--accent);
+    animation: blink-fast 1.5s infinite;
+  }
+  .contact-content { position: relative; z-index: 1; max-width: 600px; }
+  .contact h2 { margin-bottom: 16px; }
+  .contact p { color: var(--ink-dim); margin-bottom: 40px; font-size: 15px; }
+  .contact-links {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+  }
+  .contact-link {
+    display: block;
+    padding: 20px;
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    text-decoration: none;
+    color: var(--ink);
+    transition: all 0.2s;
+    position: relative;
+  }
+  .contact-link::before {
+    content: '';
+    position: absolute;
+    top: 8px; left: 8px;
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 4px var(--accent);
+  }
+  .contact-link:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
+  .contact-link .label {
+    font-size: 11px;
+    color: var(--ink-faint);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding-left: 12px;
+  }
+  .contact-link .value { font-size: 14px; padding-left: 12px; }
+  .contact-link .arrow { float: right; color: var(--accent); transition: transform 0.2s; }
+  .contact-link:hover .arrow { transform: translate(4px, -4px); }
+
+  /* HEX DUMP footer */
+  .hex-dump {
+    margin-top: 60px;
+    padding: 24px;
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    font-size: 11px;
+    line-height: 1.6;
+    color: var(--ink-faint);
+    overflow-x: auto;
+  }
+  .hex-dump-title {
+    color: var(--accent);
+    font-size: 10px;
+    margin-bottom: 12px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+  .hex-dump .addr { color: var(--ink-faint); }
+  .hex-dump .hex { color: var(--ink-dim); }
+  .hex-dump .ascii { color: var(--accent); }
+
+  footer {
+    padding: 40px 32px;
+    border-top: 1px solid var(--line);
+    text-align: center;
+    color: var(--ink-faint);
+    font-size: 11px;
+    position: relative;
+    z-index: 2;
+  }
+  footer a { color: var(--accent); text-decoration: none; }
+
+  @media (max-width: 768px) {
+    nav ul { display: none; }
+    .hero { grid-template-columns: 1fr; }
+    .about-grid { grid-template-columns: 1fr; }
+    .about-photo { max-width: 240px; }
+    .specs-grid { grid-template-columns: 1fr; }
+    .blog-item { grid-template-columns: 1fr; gap: 8px; }
+    .contact { padding: 32px 24px; }
+    main { padding: 100px 20px 60px; }
+    .statusbar .leds .led.rx, .statusbar .leds .led.err { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Status bar with LEDs -->
+<div class="statusbar">
+  <span>SYS_v1.0.0 · uptime: 184d 06:42:18</span>
+  <div class="leds">
+    <span class="led pwr">PWR</span>
+    <span class="led tx">TX</span>
+    <span class="led rx">RX</span>
+    <span class="led err">ERR</span>
+  </div>
+</div>
+
+<!-- Navigation -->
+<nav>
+  <div class="brand">jouw_naam<span>.dev</span></div>
+  <ul>
+    <li><a href="#about">about</a></li>
+    <li><a href="#projects">projects</a></li>
+    <li><a href="#blog">log</a></li>
+    <li><a href="#contact">contact</a></li>
+  </ul>
+</nav>
+
+<main>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-content">
+      <h1>
+        <span class="glow">Bits</span>, <span class="italic">bytes</span><br>
+        & soldering<br>
+        <span class="glow">irons</span>.<span class="cursor"></span>
+      </h1>
+      <p class="hero-subtitle">
+        <span class="key">role</span>: <span class="str">"embedded & software dev"</span><br>
+        <span class="key">stack</span>: <span class="str">["C", "C++", "Rust", "JS"]</span><br>
+        <span class="key">freq</span>: <span class="num">16_000_000</span> Hz · <span class="key">vcc</span>: <span class="num">3.3</span>V<br>
+        <span class="key">location</span>: <span class="str">"Bruges, BE"</span>
+      </p>
+      <div class="hero-meta">
+        <div>STATUS<span>Available_2026</span></div>
+        <div>FOCUS<span>Embedded + full-stack</span></div>
+        <div>OPEN_TO<span>Internships</span></div>
+      </div>
+    </div>
+
+    <!-- Oscilloscope -->
+    <div class="scope">
+      <div class="scope-header">
+        <span>● REC · CH1 + CH2</span>
+        <span>TRIG: AUTO</span>
+      </div>
+      <div class="scope-screen">
+        <div class="scope-readout">
+          CH1: 3.3V<br>
+          T/DIV: 1µs<br>
+          V/DIV: 1.0V
+        </div>
+        <div class="scope-readout-right">
+          freq: 16MHz<br>
+          duty: 50%<br>
+          rms: 1.65V
+        </div>
+        <svg viewBox="0 0 500 300" preserveAspectRatio="none">
+          <!-- Square wave CH1 -->
+          <path class="wave" d="M 0,200 L 30,200 L 30,100 L 80,100 L 80,200 L 130,200 L 130,100 L 180,100 L 180,200 L 230,200 L 230,100 L 280,100 L 280,200 L 330,200 L 330,100 L 380,100 L 380,200 L 430,200 L 430,100 L 480,100 L 480,200 L 500,200" />
+          <!-- Sine wave CH2 -->
+          <path class="wave wave-2" d="M 0,180 Q 25,120 50,180 T 100,180 T 150,180 T 200,180 T 250,180 T 300,180 T 350,180 T 400,180 T 450,180 T 500,180" />
+        </svg>
+      </div>
+      <div class="scope-controls">
+        <div class="scope-knob"></div>
+        <div class="scope-knob"></div>
+        <div class="scope-knob"></div>
+        <div class="scope-knob"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <section id="about">
+    <div class="section-label">0x01 / about</div>
+    <div class="about-grid">
+      <div class="about-photo">
+        <div class="pad-2"></div>
+        <div class="pad-3"></div>
+        <div class="label">[ jouw_foto.jpg ]</div>
+      </div>
+      <div class="about-text">
+        <h2>Hey, ik ben <span class="italic">jouw_naam</span>.</h2>
+        <p>
+          Derdejaarsstudent <strong>Toegepaste Informatica</strong> aan Howest Brugge.
+          Mijn interesse ligt op de grens tussen <strong>hardware en software</strong> —
+          van blinkende LEDs tot complete IoT-systemen die met cloud APIs praten.
+        </p>
+        <p>
+          Ik hou van het moment waarop een microcontroller voor het eerst je code uitvoert,
+          van een mooi gerouteerde PCB, en van firmware die elegant blijft binnen 32KB flash.
+          Op de software-kant: webapps, dashboards en alles wat zo'n embedded device tot
+          leven brengt.
+        </p>
+        <p>
+          Op zoek naar een stage waar embedded én software samenkomen. Klaar voor 2026.
+        </p>
+
+        <div class="specs">
+          <div class="specs-title">— TECHNICAL SPECIFICATIONS —</div>
+          <div class="specs-grid">
+            <div class="spec-row"><span class="k">model</span><span class="v">jouw_naam_v3</span></div>
+            <div class="spec-row"><span class="k">year</span><span class="v">3rd / final</span></div>
+            <div class="spec-row"><span class="k">campus</span><span class="v">Howest Brugge</span></div>
+            <div class="spec-row"><span class="k">specialty</span><span class="v">SW + embedded</span></div>
+            <div class="spec-row"><span class="k">power</span><span class="v">coffee, ~3 cups/d</span></div>
+            <div class="spec-row"><span class="k">i/o</span><span class="v">UART, I²C, SPI, HTTP</span></div>
+          </div>
+        </div>
+
+        <div class="stack">
+          <span class="sw">C</span>
+          <span class="sw">C++</span>
+          <span class="sw">Rust</span>
+          <span class="sw">Python</span>
+          <span class="sw">JavaScript</span>
+          <span class="sw">TypeScript</span>
+          <span class="hw">STM32</span>
+          <span class="hw">ESP32</span>
+          <span class="hw">Arduino</span>
+          <span class="hw">Raspberry Pi</span>
+          <span class="hw">KiCad</span>
+          <span class="hw">Logic Analyzer</span>
+          <span class="sw">FreeRTOS</span>
+          <span class="sw">MQTT</span>
+          <span class="sw">React</span>
+          <span class="sw">Node.js</span>
+          <span class="sw">Docker</span>
+          <span class="sw">Git</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROJECTS -->
+  <section id="projects">
+    <div class="section-label">0x02 / projects</div>
+    <h2>Selected <span class="italic">builds</span>.</h2>
+    <div class="projects-grid" style="margin-top: 40px;">
+
+      <article class="project">
+        <div class="project-header">
+          <div class="project-num">// IC_001</div>
+          <span class="project-status shipped">shipped</span>
+        </div>
+        <h3>iot_sensor_node</h3>
+        <p>ESP32-based sensor netwerk dat temperatuur, luchtvochtigheid en CO₂ logt naar een eigen MQTT broker. Dashboard in React, deep-sleep voor 6 maanden battery life.</p>
+        <div class="project-tags">
+          <span>ESP32</span>
+          <span>C++</span>
+          <span>MQTT</span>
+          <span>React</span>
+        </div>
+        <a href="#" class="project-link">view case study</a>
+      </article>
+
+      <article class="project">
+        <div class="project-header">
+          <div class="project-num">// IC_002</div>
+          <span class="project-status shipped">shipped</span>
+        </div>
+        <h3>custom_pcb_synth</h3>
+        <p>Zelf-ontworpen PCB met STM32 als hart. Synth-engine in C, MIDI over USB, audio output via I²S DAC. Volledig schema en gerber files op GitHub.</p>
+        <div class="project-tags">
+          <span>STM32</span>
+          <span>C</span>
+          <span>KiCad</span>
+          <span>I²S</span>
+        </div>
+        <a href="#" class="project-link">github repo</a>
+      </article>
+
+      <article class="project">
+        <div class="project-header">
+          <div class="project-num">// IC_003</div>
+          <span class="project-status wip">in dev</span>
+        </div>
+        <h3>home_automation_hub</h3>
+        <p>Raspberry Pi-based hub die mijn IoT devices, Zigbee sensoren en Home Assistant aan elkaar koppelt. Custom web UI bovenop, alles in Docker.</p>
+        <div class="project-tags">
+          <span>RPi</span>
+          <span>Python</span>
+          <span>Zigbee</span>
+          <span>Docker</span>
+        </div>
+        <a href="#" class="project-link">follow progress</a>
+      </article>
+
+      <article class="project">
+        <div class="project-header">
+          <div class="project-num">// IC_004</div>
+          <span class="project-status shipped">shipped</span>
+        </div>
+        <h3>hackathon_entry</h3>
+        <p>24 uur op Hack The Future. Embedded prototype + web dashboard, gebouwd met team van 4. Lessons learned in de write-up.</p>
+        <div class="project-tags">
+          <span>Arduino</span>
+          <span>Node.js</span>
+          <span>WebSocket</span>
+        </div>
+        <a href="#" class="project-link">read writeup</a>
+      </article>
+
+      <article class="project">
+        <div class="project-header">
+          <div class="project-num">// IC_005</div>
+          <span class="project-status archived">archived</span>
+        </div>
+        <h3>retro_keyboard</h3>
+        <p>Mechanisch keyboard met handgesoldeerd PCB, QMK firmware en custom keycaps. Mijn eerste echte embedded project — niet perfect, wel geleerd.</p>
+        <div class="project-tags">
+          <span>QMK</span>
+          <span>C</span>
+          <span>Soldering</span>
+        </div>
+        <a href="#" class="project-link">view build log</a>
+      </article>
+
+      <article class="project">
+        <div class="project-header">
+          <div class="project-num">// IC_006</div>
+          <span class="project-status wip">in dev</span>
+        </div>
+        <h3>cnc_controller</h3>
+        <p>Rust firmware voor een 3-axis CNC controller op STM32. Real-time motion planning, GRBL-compatible. Side project, leerproject.</p>
+        <div class="project-tags">
+          <span>Rust</span>
+          <span>STM32</span>
+          <span>Real-time</span>
+        </div>
+        <a href="#" class="project-link">view progress</a>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- BLOG / EVENTS -->
+  <section id="blog">
+    <div class="section-label">0x03 / log</div>
+    <h2>Recent <span class="italic">posts</span> & events.</h2>
+    <div class="blog-list" style="margin-top: 40px;">
+
+      <article class="blog-item">
+        <div class="blog-date">2026.05.20</div>
+        <div class="blog-content">
+          <h3>Howest Student IT Podcast — ep. 12</h3>
+          <p>Een gesprek met [naam expert] over embedded security en de uitdagingen van firmware updates in IoT.</p>
+        </div>
+        <span class="blog-tag podcast">podcast</span>
+      </article>
+
+      <article class="blog-item">
+        <div class="blog-date">2026.04.02</div>
+        <div class="blog-content">
+          <h3>Een PCB ontwerpen van nul tot prototype</h3>
+          <p>Van schematic naar gerber files naar gesoldeerde prototype. Wat ging goed, wat ging fout, en wat ik volgende keer anders doe.</p>
+        </div>
+        <span class="blog-tag hw">hardware</span>
+      </article>
+
+      <article class="blog-item">
+        <div class="blog-date">2026.03.15</div>
+        <div class="blog-content">
+          <h3>HackHowest 2026 — reflectie</h3>
+          <p>48 uur, een team, en een idee dat tussen embedded en web zat. Lessons in scope, sleep en stack-keuzes.</p>
+        </div>
+        <span class="blog-tag event">hackathon</span>
+      </article>
+
+      <article class="blog-item">
+        <div class="blog-date">2025.11.18</div>
+        <div class="blog-content">
+          <h3>Embedded World Conference — recap</h3>
+          <p>Drie key takeaways van de sessies rond Rust in embedded, secure boot en de toekomst van RISC-V.</p>
+        </div>
+        <span class="blog-tag event">event</span>
+      </article>
+
+      <article class="blog-item">
+        <div class="blog-date">2025.11.12</div>
+        <div class="blog-content">
+          <h3>Hack The Future — Antwerpen</h3>
+          <p>Mijn eerste fysieke hackathon. Drie key takeaways en waarom ik volgend jaar zeker terugkom.</p>
+        </div>
+        <span class="blog-tag event">event</span>
+      </article>
+
+      <article class="blog-item">
+        <div class="blog-date">2025.09.30</div>
+        <div class="blog-content">
+          <h3>Hoe deze site werd gemaakt</h3>
+          <p>De technologie, de keuzes en hoeveel moeite het kost om hier een nieuwe post toe te voegen.</p>
+        </div>
+        <span class="blog-tag">meta</span>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section id="contact">
+    <div class="section-label">0x04 / contact</div>
+    <div class="contact">
+      <div class="contact-content">
+        <h2>Let's <span class="italic">build</span> something.</h2>
+        <p>
+          Open voor stage-opportuniteiten in embedded, IoT, of full-stack development.
+          Goeie gesprekken over solder fumes, clean code of koffie zijn ook welkom.
+        </p>
+        <div class="contact-links">
+
+          <a href="mailto:jouw.email@howest.be" class="contact-link">
+            <div class="label">EMAIL <span class="arrow">↗</span></div>
+            <div class="value">jouw.email@howest.be</div>
+          </a>
+
+          <a href="https://linkedin.com/in/jouw-profiel" class="contact-link">
+            <div class="label">LINKEDIN <span class="arrow">↗</span></div>
+            <div class="value">/in/jouw-profiel</div>
+          </a>
+
+          <a href="https://github.com/jouw-username" class="contact-link">
+            <div class="label">GITHUB <span class="arrow">↗</span></div>
+            <div class="value">@jouw-username</div>
+          </a>
+
+          <a href="/cv.pdf" class="contact-link">
+            <div class="label">CV / DATASHEET <span class="arrow">↗</span></div>
+            <div class="value">download (pdf)</div>
+          </a>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Hex dump easter egg -->
+    <div class="hex-dump">
+      <div class="hex-dump-title">// memory dump · 0x00000000</div>
+      <div><span class="addr">00000000</span> &nbsp; <span class="hex">48 65 6c 6c 6f 20 66 72 6f 6d 20 42 72 75 67 65</span> &nbsp; <span class="ascii">Hello from Bruge</span></div>
+      <div><span class="addr">00000010</span> &nbsp; <span class="hex">73 21 20 54 68 61 6e 6b 73 20 66 6f 72 20 73 63</span> &nbsp; <span class="ascii">s! Thanks for sc</span></div>
+      <div><span class="addr">00000020</span> &nbsp; <span class="hex">72 6f 6c 6c 69 6e 67 20 74 6f 20 74 68 65 20 65</span> &nbsp; <span class="ascii">rolling to the e</span></div>
+      <div><span class="addr">00000030</span> &nbsp; <span class="hex">6e 64 2e 20 4c 65 74 27 73 20 74 61 6c 6b 2e 00</span> &nbsp; <span class="ascii">nd. Let's talk.·</span></div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <p>© 2025—2026 jouw_naam · <span style="color: var(--accent-amber);">VCC: 3.3V</span> · <span style="color: var(--accent);">GND: solid</span> · built with caffeine in Bruges · <a href="#">view source</a></p>
+</footer>
+
+<script>
+  // Smooth reveal on scroll
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.style.opacity = '1';
+        entry.target.style.transform = 'translateY(0)';
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('section:not(.hero), .project, .blog-item').forEach(el => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(20px)';
+    el.style.transition = 'opacity 0.6s ease-out, transform 0.6s ease-out';
+    observer.observe(el);
+  });
+
+  // Subtle parallax on scope
+  document.addEventListener('mousemove', (e) => {
+    const scope = document.querySelector('.scope');
+    if (!scope) return;
+    const x = (e.clientX / window.innerWidth - 0.5) * 8;
+    const y = (e.clientY / window.innerHeight - 0.5) * 8;
+    scope.style.transform = `translate(${x}px, ${y}px)`;
+  });
+
+  // Update uptime in status bar
+  const startTime = Date.now();
+  setInterval(() => {
+    const elapsed = Math.floor((Date.now() - startTime) / 1000);
+    const h = String(Math.floor(elapsed / 3600) % 24).padStart(2, '0');
+    const m = String(Math.floor(elapsed / 60) % 60).padStart(2, '0');
+    const s = String(elapsed % 60).padStart(2, '0');
+    const statusBar = document.querySelector('.statusbar span');
+    if (statusBar) statusBar.textContent = `SYS_v1.0.0 · uptime: 184d ${h}:${m}:${s}`;
+  }, 1000);
+</script>
+
+</body>
+</html>
