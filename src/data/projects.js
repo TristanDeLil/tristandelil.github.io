@@ -2,7 +2,7 @@
 export const projects = [
   {
     id: 'IC_001',
-    title: 'iot_sensor_node',
+    title: 'Walter photoframe',
     status: 'shipped',
     description: 'ESP32-based sensor netwerk dat temperatuur, luchtvochtigheid en CO₂ logt naar een eigen MQTT broker. Dashboard in React, deep-sleep voor 6 maanden battery life.',
     tags: ['ESP32', 'C++', 'MQTT', 'React'],
