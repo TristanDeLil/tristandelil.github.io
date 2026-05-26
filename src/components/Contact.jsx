@@ -2,7 +2,6 @@ const contactLinks = [
   { label: 'EMAIL', value: 'tristan.de.lil@student.howest.be', href: 'mailto:tristan.de.lil@student.howest.be' },
   { label: 'LINKEDIN', value: '/in/tristan-de-lil', href: 'https://linkedin.com/in/tristan-de-lil' },
   { label: 'GITHUB', value: '@tristandelil', href: 'https://github.com/tristandelil' },
-  { label: 'CV / DATASHEET', value: 'download (pdf)', href: '/cv.pdf' },
 ]
 
 const hexLines = [
