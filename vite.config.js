@@ -7,4 +7,5 @@ export default defineConfig({
   // If deploying to username.github.io → base: '/'
   // If deploying to username.github.io/repo-name → base: '/repo-name/'
   base: '/',
+  build: { outDir: 'docs' },
 })
