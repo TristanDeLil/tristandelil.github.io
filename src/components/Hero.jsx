@@ -24,14 +24,14 @@ export default function Hero() {
         </h1>
         <p className="hero-subtitle">
           <span className="key">role</span>: <span className="str">"embedded & software dev"</span><br />
-          <span className="key">stack</span>: <span className="str">["C", "C++", "Rust", "JS"]</span><br />
+          <span className="key">stack</span>: <span className="str">["C", "C++","C#", "Python","TS", "JS"]</span><br />
           <span className="key">freq</span>: <span className="num">16_000_000</span> Hz · <span className="key">vcc</span>: <span className="num">3.3</span>V<br />
           <span className="key">location</span>: <span className="str">"Bruges, BE"</span>
         </p>
         <div className="hero-meta">
-          <div>STATUS<span>Available_2026</span></div>
+          <div>STATUS<span>0x0001</span></div>
           <div>FOCUS<span>Embedded + full-stack</span></div>
-          <div>OPEN_TO<span>Internships</span></div>
+          {/* <div>OPEN_TO<span>JOB</span></div> */}
         </div>
       </div>
 

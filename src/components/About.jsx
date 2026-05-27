@@ -6,7 +6,6 @@ const specs = [
   { k: 'year', v: '3rd / final' },
   { k: 'campus', v: 'Howest Brugge' },
   { k: 'specialty', v: 'SW + embedded' },
-  { k: 'power', v: 'coffee, ~3 cups/d' },
   { k: 'i/o', v: 'UART, I²C, SPI, HTTP' },
 ]
 
@@ -18,12 +17,13 @@ export default function About() {
         <div className="about-photo">
           <div className="pad-2"></div>
           <div className="pad-3"></div>
-          <div className="label">[ jouw_foto.jpg ]</div>
+          <div className="label"><img src="/img/mypic.jpg" alt="Tristan De Lil" /></div>
         </div>
         <div className="about-text">
-          <h2>Hey, ik ben <span className="italic">Tristan De Lil</span>.</h2>
+          <h2>Hey, ik ben <span className="italic">Tristan</span>.</h2>
           <p>
-            Derdejaarsstudent <strong>Toegepaste Informatica</strong> aan Howest Brugge.
+            Derdejaarsstudent <strong>Toegepaste Informatica</strong> aan Howest Brugge 
+            En afgestudeerd aan Vives Brugge met Prof Bachelor Elektronica-ICT
             Mijn interesse ligt op de grens tussen <strong>hardware en software</strong> —
             van blinkende LEDs tot complete IoT-systemen die met cloud APIs praten.
           </p>
@@ -34,7 +34,7 @@ export default function About() {
             leven brengt.
           </p>
           <p>
-            Op zoek naar een stage waar embedded én software samenkomen. Klaar voor 2026.
+
           </p>
 
           <div className="specs">

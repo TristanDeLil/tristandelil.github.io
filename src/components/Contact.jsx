@@ -1,6 +1,6 @@
 const contactLinks = [
   { label: 'EMAIL', value: 'tristan.de.lil@student.howest.be', href: 'mailto:tristan.de.lil@student.howest.be' },
-  { label: 'LINKEDIN', value: '/in/tristan-de-lil', href: 'https://linkedin.com/in/tristan-de-lil' },
+  { label: 'LINKEDIN', value: '/in/tristan-de-lil', href: 'https://www.linkedin.com/in/tristan-de-lil-a19738231/' },
   { label: 'GITHUB', value: '@tristandelil', href: 'https://github.com/tristandelil' },
 ]
 

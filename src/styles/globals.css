@@ -620,6 +620,109 @@ h2 .italic { font-style: italic; color: var(--accent); }
 .blog-tag.podcast { color: var(--accent-blue); border-color: rgba(76,201,240,0.3); }
 .blog-tag.hw { color: var(--copper); border-color: rgba(184,115,51,0.4); }
 
+/* INTERNSHIP */
+.internship-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(480px, 1fr));
+  gap: 32px;
+}
+.internship-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  position: relative;
+  transition: border-color 0.3s;
+}
+.internship-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 32px; right: 32px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent), transparent);
+  opacity: 0.4;
+  transition: opacity 0.3s;
+}
+.internship-card:hover { border-color: rgba(0, 255, 136, 0.3); }
+.internship-card:hover::before { opacity: 0.9; }
+
+.internship-id {
+  font-size: 10px;
+  color: var(--ink-faint);
+  letter-spacing: 0.15em;
+  margin-bottom: 6px;
+}
+.internship-company {
+  font-family: 'Fraunces', serif;
+  font-size: 26px;
+  font-weight: 300;
+  color: var(--ink);
+  margin-bottom: 8px;
+}
+.internship-meta {
+  font-size: 12px;
+  color: var(--ink-faint);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+.internship-meta .sep { color: var(--line-2); }
+
+.internship-project {
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 20px;
+}
+.internship-project-label {
+  font-size: 9px;
+  color: var(--accent);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.internship-project-title {
+  font-size: 15px;
+  color: var(--ink);
+  font-weight: 500;
+  margin-bottom: 10px;
+}
+.internship-project p {
+  font-size: 13px;
+  color: var(--ink-dim);
+  line-height: 1.7;
+}
+
+.internship-learnings ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+}
+.internship-learnings li {
+  font-size: 13px;
+  color: var(--ink-dim);
+  padding-left: 16px;
+  position: relative;
+  line-height: 1.6;
+}
+.internship-learnings li::before {
+  content: '→';
+  position: absolute;
+  left: 0;
+  color: var(--accent);
+  font-size: 11px;
+}
+
+@media (max-width: 768px) {
+  .internship-grid { grid-template-columns: 1fr; }
+}
+
 /* CONTACT */
 .contact {
   background: var(--panel);
