@@ -1,151 +1,175 @@
-# Portfolio — React + Vite
+# TristanDeLil.github.io — E-Portfolio
 
-Mijn persoonlijke portfolio website voor Professional Networking (Howest TI).
-Gebouwd met React, Vite en zonder design framework (puur eigen CSS).
+Persoonlijk e-portfolio voor het vak Professional Networking (Howest TI, 3e jaar).
+Gebouwd met React + Vite, puur eigen CSS, geen design framework.
+
+Live: [tristandelil.github.io](https://tristandelil.github.io)
+
+---
 
 ## Quick start
 
-### 1. Installeer Node.js
-Download van [nodejs.org](https://nodejs.org/) (LTS versie, 20.x of hoger).
-Check of het werkt:
 ```bash
-node --version
-npm --version
-```
-
-### 2. Clone en install
-```bash
-git clone https://github.com/JOUW-USERNAME/JOUW-USERNAME.github.io.git
-cd JOUW-USERNAME.github.io
 npm install
+npm run dev        # -> http://localhost:5173
 ```
 
-### 3. Run lokaal
-```bash
-npm run dev
-```
-Open [http://localhost:5173](http://localhost:5173)
-
-### 4. Build voor productie
-```bash
-npm run build
-```
-De output staat in `dist/`.
+---
 
 ## Project structuur
 
 ```
 src/
-├── components/       # Reusable UI components
-│   ├── StatusBar.jsx
-│   ├── Nav.jsx
-│   ├── Hero.jsx
-│   ├── About.jsx
-│   ├── Projects.jsx
-│   ├── Blog.jsx
-│   ├── Contact.jsx
+├── components/
+│   ├── StatusBar.jsx     # bovenbalk met uptime + LEDs
+│   ├── Nav.jsx           # navigatie
+│   ├── Hero.jsx          # hero met oscilloscoop + terminal widget
+│   ├── About.jsx         # over mij + tech stack
+│   ├── Internship.jsx    # stage ervaringen
+│   ├── Projects.jsx      # projecten grid
+│   ├── Blog.jsx          # post lijst
+│   ├── Contact.jsx       # contact + git log + hex dump
 │   └── Footer.jsx
 ├── pages/
-│   ├── Home.jsx      # Homepage
-│   └── BlogPost.jsx  # Individual blog post page
-├── data/             # ← Hier voeg je content toe!
-│   ├── projects.js
-│   └── posts.js
+│   ├── Home.jsx          # homepage (alle secties)
+│   └── BlogPost.jsx      # individuele post pagina
+├── data/                 # content hier aanpassen
+│   ├── posts.js          # blog posts / event reflecties
+│   └── projects.js       # projecten
 ├── styles/
 │   └── globals.css
 ├── App.jsx
 └── main.jsx
+
+public/
+├── img/                  # afbeeldingen voor posts
+├── 404.html              # SPA routing fix voor GitHub Pages
+└── .nojekyll             # skip Jekyll build
+
+docs/                     # gebouwde site (gecommit naar main)
+scripts/
+└── export-pdf.mjs        # PDF export script
 ```
+
+---
 
 ## Content toevoegen
 
-### Nieuwe blog post (event reflectie, podcast, etc.)
-Open `src/data/posts.js` en voeg een object toe aan het begin van de array:
+### Nieuwe blog post
+
+Open `src/data/posts.js` en voeg toe aan het begin van de array:
 
 ```javascript
 {
-  slug: 'mijn-nieuwe-post',           // wordt /post/mijn-nieuwe-post
-  date: '2026.05.26',
-  title: 'Titel van de post',
-  excerpt: 'Korte samenvatting voor de homepage.',
-  tag: 'event',                       // 'event' | 'podcast' | 'hw' | ''
+  slug: 'mijn-event',              // URL wordt /post/mijn-event
+  date: '2026.05.27',
+  title: 'Titel van het event',
+  excerpt: 'Korte samenvatting voor de lijst.',
+  tag: 'event',                    // 'event' | 'podcast' | 'hw' | 'tech & meet' | ''
   tagLabel: 'hackathon',
   content: `
-    <p>HTML inhoud van de post hier.</p>
-    <h2>Een subtitel</h2>
-    <p>Meer tekst...</p>
+    <p>HTML inhoud hier.</p>
+    <img src="/img/foto.jpg" alt="beschrijving"
+         style="width:100%;border-radius:8px;margin-top:20px;" />
   `,
 }
 ```
 
+> Let op: gebruik `style="..."` (HTML string), niet `style={{ }}` (JSX) in de content.
+
+### Afbeeldingen in posts
+
+Zet foto's in `public/img/` en gebruik ze als:
+```html
+<img src="/img/bestandsnaam.jpg" alt="..." style="width:100%;" />
+```
+
 ### Nieuw project
+
 Open `src/data/projects.js`:
 
 ```javascript
 {
-  id: 'IC_007',
-  title: 'mijn_project',
-  status: 'shipped',                  // 'shipped' | 'wip' | 'archived'
-  description: 'Beschrijving...',
+  id: 'IC_009',
+  title: 'project_naam',
+  status: 'shipped',               // 'shipped' | 'wip' | 'archived'
+  description: 'Wat het doet.',
   tags: ['React', 'TypeScript'],
-  link: 'https://github.com/...',
-  linkText: 'view repo',
+  link: 'https://github.com/TristanDeLil/...',
+  linkText: 'github repo',
 }
 ```
+
+### Stage toevoegen
+
+Open `src/components/Internship.jsx` en bewerk het `internships` array bovenaan het bestand.
+
+---
 
 ## Deploy naar GitHub Pages
 
-### Eerste keer:
+De gebouwde site staat in de `docs/` map die gecommit is op `main`.
+GitHub Pages serveert automatisch vanuit `main` -> `/docs`.
 
-1. Maak repository op GitHub met naam **`JOUW-USERNAME.github.io`**
-2. Push deze code naar de repo:
-```bash
-git init
-git add .
-git commit -m "initial portfolio"
-git branch -M main
-git remote add origin https://github.com/JOUW-USERNAME/JOUW-USERNAME.github.io.git
-git push -u origin main
-```
-
-3. Deploy:
-```bash
-npm run deploy
-```
-
-Dit publiceert naar de `gh-pages` branch automatisch.
-
-4. Op GitHub: **Settings → Pages → Source: `gh-pages` branch**
-5. Wacht 1-2 min → bereikbaar op `https://JOUW-USERNAME.github.io`
-
-### Updates pushen:
+### Na elke wijziging:
 
 ```bash
-git add .
-git commit -m "added new event post"
+npm run build          # bouwt naar docs/
+git add docs/
+git commit -m "update portfolio"
 git push
-npm run deploy
 ```
 
-## Tweaken design
+### Settings op GitHub (eenmalig):
 
-Alle kleuren en variabelen staan boven in `src/styles/globals.css`:
+Settings -> Pages -> Source: `Deploy from a branch` -> Branch: `main` -> Folder: `/docs`
+
+---
+
+## PDF backup exporteren
+
+Exporteert alle pagina's (home + elke blog post) als één samengevoegd PDF-bestand.
+Output wordt opgeslagen als `portfolio-backup.pdf` in de root van het project.
+
+```bash
+# Terminal 1 — start preview server
+npm run build && npm run preview
+
+# Terminal 2 — genereer PDF
+npm run export-pdf
+```
+
+Of rechtstreeks tegen de live site:
+
+```bash
+BASE_URL=https://tristandelil.github.io npm run export-pdf
+```
+
+---
+
+## Design aanpassen
+
+Kleuren in `src/styles/globals.css`:
 
 ```css
 :root {
-  --bg: #06090d;          /* hoofdachtergrond */
-  --accent: #00ff88;      /* LED green */
-  --accent-amber: #ffb000; /* power LED */
-  --accent-blue: #4cc9f0;  /* signaal */
-  ...
+  --bg:           #06090d;   /* hoofdachtergrond */
+  --accent:       #00ff88;   /* groen (LED, highlights) */
+  --accent-amber: #ffb000;   /* amber (power LED) */
+  --accent-blue:  #4cc9f0;   /* blauw (signaal) */
+  --accent-red:   #ff3344;   /* rood (error LED) */
 }
 ```
 
-## Voor de "Hoe is deze site gemaakt?" blogpost
-
-Tech stack: React 18, Vite, React Router, vanilla CSS (geen framework).
-Hosting: GitHub Pages (gratis, statisch). Custom domein optioneel via Combell DNS.
-Deploy workflow: `npm run deploy` build en pusht naar `gh-pages` branch.
-Nieuwe content toevoegen kost ~30 seconden: edit `posts.js`, commit, push.
-
 ---
+
+## Tech stack
+
+| | |
+|---|---|
+| Framework | React 18 + Vite |
+| Routing | React Router v6 |
+| Styling | Vanilla CSS (geen framework) |
+| Hosting | GitHub Pages (gratis) |
+| Fonts | JetBrains Mono + Fraunces (Google Fonts) |
+| Deploy | `docs/` folder op `main` branch |

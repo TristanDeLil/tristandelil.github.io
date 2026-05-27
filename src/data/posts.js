@@ -206,6 +206,8 @@ export const posts = [
       pragmatische weg voorwaarts. Security by design van bij de start is geen optie maar
       een vereiste: IPv6 brengt nieuwe aanvalsoppervlakken mee die je niet zomaar kunt
       kopiëren vanuit IPv4-kennis.</p>
+      <img src="/img/ipv6.jpg" alt="foto van mijn stand op de expo" style="width:100%;border-radius:8px;margin-top:20px;" />
+      <img src="/img/ipv6_2.jpg" alt="foto van mijn stand op de expo" style="width:100%;border-radius:8px;margin-top:20px;" />
     `,
   },
   {
