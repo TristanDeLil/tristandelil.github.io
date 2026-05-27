@@ -17,12 +17,13 @@ export default function StatusBar() {
 
   return (
     <div className="statusbar">
-      <span>SYS_v1.0.0 · uptime: 184d {uptime}</span>
+      <span>SYS_v1.0.0 · uptime: {uptime} · branch: <span style={{color:'var(--accent)'}}>main</span> · build: <span style={{color:'var(--accent)'}}>passing</span></span>
       <div className="leds">
         <span className="led pwr">PWR</span>
         <span className="led tx">TX</span>
         <span className="led rx">RX</span>
         <span className="led err">ERR</span>
+        <span className="led ci">CI</span>
       </div>
     </div>
   )

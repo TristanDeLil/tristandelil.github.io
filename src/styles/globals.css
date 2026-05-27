@@ -251,6 +251,68 @@ h2 .italic { font-style: italic; color: var(--accent); }
   font-size: 13px;
 }
 
+/* Hero right column */
+.hero-right {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 380px;
+  flex-shrink: 0;
+}
+
+/* Terminal widget */
+.terminal {
+  background: #000;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  animation: fadeUp 0.8s ease-out 0.5s backwards;
+}
+.terminal-header {
+  background: #1a1a1a;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-bottom: 1px solid #2a2a2a;
+}
+.terminal-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.terminal-title {
+  font-size: 11px;
+  color: var(--ink-faint);
+  margin-left: 8px;
+  letter-spacing: 0.05em;
+}
+.terminal-body {
+  padding: 12px 14px;
+  font-size: 11px;
+  line-height: 1.8;
+}
+.terminal-cmd {
+  color: var(--ink-dim);
+  display: flex;
+  gap: 8px;
+}
+.terminal-out {
+  color: var(--ink-faint);
+  padding-left: 20px;
+  font-size: 10px;
+}
+.terminal-prompt { color: var(--accent); flex-shrink: 0; }
+.terminal-caret {
+  color: var(--accent);
+  animation: blink 1s step-end infinite;
+}
+
+/* CI led */
+.led.ci { color: var(--accent); }
+.led.ci::before { background: var(--accent); animation: blink-fast 2s infinite; }
+
 /* Oscilloscope */
 .scope {
   background: #000;
@@ -261,6 +323,7 @@ h2 .italic { font-style: italic; color: var(--accent); }
   box-shadow: 0 20px 60px rgba(0,0,0,0.6), inset 0 0 60px rgba(0, 255, 136, 0.04);
   animation: fadeUp 0.8s ease-out 0.3s backwards;
   transition: transform 0.1s ease-out;
+  width: 100%;
 }
 .scope-header {
   display: flex;
@@ -798,6 +861,50 @@ h2 .italic { font-style: italic; color: var(--accent); }
 .contact-link .arrow { float: right; color: var(--accent); transition: transform 0.2s; }
 .contact-link:hover .arrow { transform: translate(4px, -4px); }
 
+/* Contact footer panels */
+.contact-footer-panels {
+  margin-top: 60px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+/* Git log */
+.git-log {
+  padding: 24px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--ink-faint);
+}
+.git-log-title {
+  color: var(--accent);
+  font-size: 10px;
+  margin-bottom: 12px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+.git-log-entry {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  padding: 3px 0;
+  flex-wrap: wrap;
+}
+.git-hash { color: var(--accent-amber); flex-shrink: 0; }
+.git-ref {
+  font-size: 9px;
+  padding: 1px 6px;
+  background: rgba(0,255,136,0.08);
+  border: 1px solid rgba(0,255,136,0.2);
+  border-radius: 3px;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+.git-msg { color: var(--ink-dim); }
+
 /* Hex dump */
 .hex-dump {
   margin-top: 60px;
@@ -918,6 +1025,8 @@ footer a { color: var(--accent); }
 @media (max-width: 768px) {
   nav ul { display: none; }
   .hero { grid-template-columns: 1fr; }
+  .hero-right { width: 100%; }
+  .contact-footer-panels { grid-template-columns: 1fr; }
   .about-grid { grid-template-columns: 1fr; }
   .about-photo { max-width: 240px; }
   .specs-grid { grid-template-columns: 1fr; }

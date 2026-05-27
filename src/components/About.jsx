@@ -6,7 +6,10 @@ const specs = [
   { k: 'year', v: '3rd / final' },
   { k: 'campus', v: 'Howest Brugge' },
   { k: 'specialty', v: 'SW + embedded' },
-  { k: 'i/o', v: 'UART, I²C, SPI, HTTP' },
+  { k: 'arch', v: 'bare-metal → cloud' },
+  { k: 'hw i/o', v: 'UART, I²C, SPI, CAN' },
+  { k: 'sw i/o', v: 'REST, MQTT, WebSocket' },
+  { k: 'ci/cd', v: 'GitHub Actions · Docker' },
 ]
 
 export default function About() {
